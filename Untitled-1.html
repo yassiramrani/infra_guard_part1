@@ -1,0 +1,1018 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard – Anomalies détectées</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', sans-serif;
+      background: #f5f7fa;
+      min-height: 100vh;
+      padding: 0;
+      color: #2c3e50;
+    }
+
+    .top-bar {
+      background: #1a2332;
+      color: white;
+      padding: 0 40px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .logo-section {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .logo {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 18px;
+    }
+
+    .logo-text {
+      font-size: 20px;
+      font-weight: 600;
+      letter-spacing: -0.5px;
+    }
+
+    .date-time {
+      font-size: 14px;
+      color: #a0aec0;
+      font-weight: 500;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 30px 40px;
+    }
+
+    header {
+      margin-bottom: 35px;
+    }
+
+    .page-title {
+      font-size: 28px;
+      font-weight: 700;
+      color: #1a2332;
+      margin-bottom: 8px;
+      letter-spacing: -0.5px;
+    }
+
+    .subtitle {
+      font-size: 15px;
+      color: #718096;
+      font-weight: 500;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 24px;
+      margin-bottom: 30px;
+    }
+
+    .card {
+      background: white;
+      padding: 28px;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      border: 1px solid #e2e8f0;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+
+    .card:hover {
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      transform: translateY(-2px);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 20px;
+    }
+
+    .card-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .icon-primary { background: #eef2ff; color: #667eea; }
+    .icon-danger { background: #fef2f2; color: #ef4444; }
+    .icon-warning { background: #fffbeb; color: #f59e0b; }
+    .icon-info { background: #eff6ff; color: #3b82f6; }
+
+    .card-value {
+      font-size: 36px;
+      font-weight: 700;
+      color: #1a2332;
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+
+    .card-label {
+      color: #718096;
+      font-size: 14px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .charts-section {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+      gap: 24px;
+      margin-bottom: 30px;
+    }
+
+    .chart-container {
+      background: white;
+      padding: 28px;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      border: 1px solid #e2e8f0;
+    }
+
+    .chart-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #1a2332;
+      margin-bottom: 24px;
+      letter-spacing: -0.3px;
+    }
+
+    .table-container {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      border: 1px solid #e2e8f0;
+      overflow: hidden;
+    }
+
+    .table-header {
+      background: white;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 24px 28px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+
+    .table-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #1a2332;
+      letter-spacing: -0.3px;
+    }
+
+    .search-box {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .search-input {
+      padding: 10px 16px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      width: 280px;
+      font-size: 14px;
+      outline: none;
+      transition: all 0.2s;
+      background: #f9fafb;
+    }
+
+    .search-input:focus {
+      border-color: #667eea;
+      background: white;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 16px 28px;
+      text-align: left;
+    }
+
+    th {
+      background: #f9fafb;
+      color: #374151;
+      font-weight: 700;
+      text-transform: uppercase;
+      font-size: 12px;
+      letter-spacing: 0.8px;
+      white-space: nowrap;
+      border-bottom: 2px solid #e2e8f0;
+    }
+
+    td {
+      color: #4b5563;
+      font-size: 14px;
+      border-bottom: 1px solid #f3f4f6;
+    }
+
+    .map-button {
+      background: #667eea;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 13px;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .map-button:hover {
+      background: #5568d3;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+    }
+
+    .map-button:active {
+      transform: translateY(0);
+    }
+
+    tbody tr {
+      transition: background 0.15s ease;
+    }
+
+    tbody tr:hover {
+      background: #f9fafb;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      text-transform: uppercase;
+    }
+
+    .badge-danger {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .badge-success {
+      background: #d1fae5;
+      color: #065f46;
+    }
+
+    .badge-warning {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .badge-info {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+
+    .pagination {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+      padding: 24px;
+      background: white;
+      border-top: 1px solid #e2e8f0;
+    }
+
+    .pagination button {
+      padding: 10px 16px;
+      border: 1px solid #e2e8f0;
+      background: white;
+      color: #374151;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 13px;
+      transition: all 0.2s ease;
+    }
+
+    .pagination button:hover:not(:disabled) {
+      background: #f9fafb;
+      border-color: #667eea;
+      color: #667eea;
+    }
+
+    .pagination button:disabled {
+      background: #f9fafb;
+      border-color: #e2e8f0;
+      color: #cbd5e1;
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+
+    .pagination .page-info {
+      color: #374151;
+      font-weight: 600;
+      padding: 0 12px;
+      font-size: 14px;
+    }
+
+    .pagination input {
+      width: 60px;
+      padding: 8px;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      text-align: center;
+      font-weight: 600;
+      font-size: 14px;
+      outline: none;
+    }
+
+    .pagination input:focus {
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .error {
+      color: #991b1b;
+      text-align: center;
+      margin-top: 20px;
+      padding: 20px;
+      background: #fee2e2;
+      border-radius: 12px;
+      font-weight: 600;
+      border: 1px solid #fecaca;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 60px;
+      color: #718096;
+      font-size: 15px;
+    }
+
+    .spinner {
+      border: 3px solid #e2e8f0;
+      border-top: 3px solid #667eea;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 0.8s linear infinite;
+      margin: 20px auto;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    @media (max-width: 768px) {
+      .top-bar {
+        padding: 0 20px;
+      }
+      .container {
+        padding: 20px;
+      }
+      .page-title { 
+        font-size: 24px; 
+      }
+      .stats { 
+        grid-template-columns: 1fr; 
+      }
+      .charts-section { 
+        grid-template-columns: 1fr; 
+      }
+      .search-input { 
+        width: 100%; 
+      }
+      .table-header { 
+        flex-direction: column;
+        align-items: stretch;
+      }
+      th, td {
+        padding: 12px 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="top-bar">
+  <div class="logo-section">
+    <div class="logo">AD</div>
+    <span class="logo-text">Anomaly Detection</span>
+  </div>
+  <div class="date-time">
+    <div id="dateTime"></div>
+    <div id="userLocation" style="font-size: 12px; margin-top: 4px; color: #10b981;"></div>
+  </div>
+</div>
+
+<div class="container">
+  <header>
+    <h1 class="page-title">Tableau de bord des anomalies</h1>
+    <p class="subtitle">Surveillance et analyse en temps réel des anomalies système</p>
+  </header>
+
+  <div class="stats">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon icon-primary">∑</div>
+      </div>
+      <div class="card-value" id="total">0</div>
+      <div class="card-label">Total enregistrements</div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon icon-danger">!</div>
+      </div>
+      <div class="card-value" id="anomalies">0</div>
+      <div class="card-label">Anomalies détectées</div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon icon-warning">◐</div>
+      </div>
+      <div class="card-value" id="faible">0</div>
+      <div class="card-label">Urgence faible</div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon icon-info">●</div>
+      </div>
+      <div class="card-value" id="moyenne">0</div>
+      <div class="card-label">Urgence moyenne</div>
+    </div>
+  </div>
+
+  <div class="charts-section">
+    <div class="chart-container">
+      <div class="chart-title">Distribution des anomalies</div>
+      <canvas id="anomaliesChart"></canvas>
+    </div>
+    <div class="chart-container">
+      <div class="chart-title">Niveaux d'urgence</div>
+      <canvas id="urgenceChart"></canvas>
+    </div>
+  </div>
+
+  <div class="table-container">
+    <div class="table-header">
+      <div class="table-title">Liste des enregistrements</div>
+      <div class="search-box">
+        <input type="text" id="searchInput" class="search-input" placeholder="Rechercher dans les enregistrements...">
+      </div>
+    </div>
+    <div id="loadingIndicator" class="loading">
+      <div class="spinner"></div>
+      <p>Chargement des données en cours...</p>
+    </div>
+    <table id="dataTable" style="display: none;">
+      <thead>
+        <tr id="table-head"></tr>
+      </thead>
+      <tbody id="table-body"></tbody>
+    </table>
+    <div class="pagination" id="pagination" style="display: none;">
+      <button id="firstPage">« Début</button>
+      <button id="prevPage">‹ Précédent</button>
+      <span class="page-info">
+        Page <input type="number" id="pageInput" value="1" min="1"> sur <span id="totalPages">1</span>
+      </span>
+      <button id="nextPage">Suivant ›</button>
+      <button id="lastPage">Fin »</button>
+    </div>
+  </div>
+
+  <p id="error" class="error" style="display: none;"></p>
+</div>
+
+<script>
+// Afficher la date et l'heure
+function updateDateTime() {
+  const now = new Date();
+  const options = { 
+    weekday: 'long', 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  };
+  document.getElementById('dateTime').textContent = now.toLocaleDateString('fr-FR', options);
+}
+updateDateTime();
+setInterval(updateDateTime, 60000);
+
+// Obtenir et afficher la position actuelle de l'utilisateur avec haute précision
+function getUserLocation() {
+  if (navigator.geolocation) {
+    const locationElement = document.getElementById('userLocation');
+    locationElement.textContent = '📍 Obtention de votre position...';
+    
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        // Arrondir la position à ~100m de précision
+        const lat = Math.round(position.coords.latitude * 1000) / 1000;
+        const lon = Math.round(position.coords.longitude * 1000) / 1000;
+        
+        locationElement.innerHTML = `📍 Votre position : ${lat.toFixed(3)}, ${lon.toFixed(3)} <span style="color: #a0aec0;">(±100m)</span>`;
+        
+        // Stocker la position arrondie pour l'utiliser dans les boutons
+        window.userPosition = {
+          latitude: lat,
+          longitude: lon,
+          accuracy: 100
+        };
+      },
+      (error) => {
+        const locationElement = document.getElementById('userLocation');
+        locationElement.style.color = '#ef4444';
+        
+        switch(error.code) {
+          case error.PERMISSION_DENIED:
+            locationElement.innerHTML = '❌ Localisation refusée - <a href="#" style="color: #3b82f6; text-decoration: underline;" onclick="getUserLocation(); return false;">Réessayer</a>';
+            break;
+          case error.POSITION_UNAVAILABLE:
+            locationElement.textContent = '❌ Position indisponible';
+            break;
+          case error.TIMEOUT:
+            locationElement.innerHTML = '⏱️ Délai dépassé - <a href="#" style="color: #3b82f6; text-decoration: underline;" onclick="getUserLocation(); return false;">Réessayer</a>';
+            break;
+          default:
+            locationElement.textContent = '❌ Erreur de localisation';
+        }
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 15000,
+        maximumAge: 0
+      }
+    );
+  } else {
+    document.getElementById('userLocation').textContent = '❌ Géolocalisation non supportée';
+    document.getElementById('userLocation').style.color = '#ef4444';
+  }
+}
+
+// Obtenir la position au chargement
+getUserLocation();
+// Mettre à jour la position toutes les 60 secondes
+setInterval(getUserLocation, 60000);
+
+let allRows = [];
+let filteredRows = [];
+let currentPage = 1;
+const rowsPerPage = 10;
+let anomaliesChart, urgenceChart;
+
+async function fetchCSV() {
+  try {
+    const response = await fetch("anomalies_detectees.csv");
+
+    if (!response.ok) {
+      throw new Error("Impossible de charger le fichier CSV");
+    }
+
+    const data = await response.text();
+    const rows = data.trim().split("\n");
+    const headers = rows[0].split(",").map(h => h.trim());
+
+    const tableHead = document.getElementById("table-head");
+    tableHead.innerHTML = "";
+
+    const latitudeIndex = headers.findIndex(h => h.toLowerCase().includes('latitude'));
+    const longitudeIndex = headers.findIndex(h => h.toLowerCase().includes('longitude'));
+
+    headers.forEach((h, index) => {
+      if (index !== latitudeIndex && index !== longitudeIndex) {
+        const th = document.createElement("th");
+        th.textContent = h;
+        tableHead.appendChild(th);
+      }
+    });
+    
+    const thMap = document.createElement("th");
+    thMap.textContent = "Localisation";
+    tableHead.appendChild(thMap);
+
+    allRows = [];
+    let anomaliesCount = 0;
+    let faibleCount = 0;
+    let moyenneCount = 0;
+
+    const urgenceIndex = headers.findIndex(h => 
+      h.toLowerCase().includes('urgence')
+    );
+
+    for (let i = 1; i < rows.length; i++) {
+      if (rows[i].trim() === "") continue;
+      
+      const cols = rows[i].split(",").map(c => c.trim());
+      
+      anomaliesCount++;
+
+      if (urgenceIndex !== -1 && cols[urgenceIndex]) {
+        const urgenceValue = cols[urgenceIndex].toUpperCase();
+        
+        if (urgenceValue === "FAIBLE") {
+          faibleCount++;
+        } else if (urgenceValue === "MOYENNE") {
+          moyenneCount++;
+          allRows.push(cols);
+        }
+      }
+    }
+
+    const total = allRows.length;
+    const normal = total - anomaliesCount;
+
+    const confianceIndex = headers.findIndex(h => 
+      h.toLowerCase().includes('confiance')
+    );
+
+    if (latitudeIndex !== -1 && longitudeIndex !== -1) {
+      const uniqueRows = [];
+      const seenLocations = new Set();
+
+      allRows.forEach(row => {
+        const locationKey = `${row[latitudeIndex]},${row[longitudeIndex]}`;
+        if (!seenLocations.has(locationKey)) {
+          seenLocations.add(locationKey);
+          uniqueRows.push(row);
+        }
+      });
+
+      allRows = uniqueRows;
+    }
+
+    if (confianceIndex !== -1) {
+      allRows.sort((a, b) => {
+        const confA = parseFloat(a[confianceIndex]) || 0;
+        const confB = parseFloat(b[confianceIndex]) || 0;
+        return confB - confA;
+      });
+    }
+
+    document.getElementById("total").textContent = total;
+    document.getElementById("anomalies").textContent = anomaliesCount;
+    document.getElementById("faible").textContent = faibleCount;
+    document.getElementById("moyenne").textContent = moyenneCount;
+
+    createCharts(anomaliesCount, normal, faibleCount, moyenneCount);
+
+    filteredRows = [...allRows];
+    displayPage(1);
+
+    document.getElementById("loadingIndicator").style.display = "none";
+    document.getElementById("dataTable").style.display = "table";
+    document.getElementById("pagination").style.display = "flex";
+
+  } catch (err) {
+    document.getElementById("loadingIndicator").style.display = "none";
+    document.getElementById("error").style.display = "block";
+    document.getElementById("error").textContent =
+      "Erreur : Assurez-vous que le fichier 'anomalies_detectees.csv' existe et lancez avec un serveur local";
+    console.error(err);
+  }
+}
+
+function createCharts(anomalies, normal, faible, moyenne) {
+  if (anomaliesChart) anomaliesChart.destroy();
+  if (urgenceChart) urgenceChart.destroy();
+
+  const ctx1 = document.getElementById('anomaliesChart').getContext('2d');
+  anomaliesChart = new Chart(ctx1, {
+    type: 'doughnut',
+    data: {
+      labels: ['Anomalies', 'Normal'],
+      datasets: [{
+        data: [anomalies, normal],
+        backgroundColor: ['#ef4444', '#10b981'],
+        borderWidth: 0
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: {
+            font: { size: 13, weight: '600', family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto' },
+            padding: 20,
+            boxWidth: 12,
+            boxHeight: 12
+          }
+        },
+        tooltip: {
+          backgroundColor: '#1a2332',
+          padding: 12,
+          titleFont: { size: 13, weight: '600' },
+          bodyFont: { size: 12 },
+          borderColor: '#e2e8f0',
+          borderWidth: 1,
+          callbacks: {
+            label: function(context) {
+              const label = context.label || '';
+              const value = context.parsed || 0;
+              const total = context.dataset.data.reduce((a, b) => a + b, 0);
+              const percentage = ((value / total) * 100).toFixed(1);
+              return label + ': ' + value + ' (' + percentage + '%)';
+            }
+          }
+        }
+      }
+    }
+  });
+
+  const ctx2 = document.getElementById('urgenceChart').getContext('2d');
+  urgenceChart = new Chart(ctx2, {
+    type: 'bar',
+    data: {
+      labels: ['FAIBLE', 'MOYENNE'],
+      datasets: [{
+        label: 'Nombre d\'anomalies',
+        data: [faible, moyenne],
+        backgroundColor: ['#f59e0b', '#3b82f6'],
+        borderWidth: 0,
+        borderRadius: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: {
+        legend: {
+          display: false
+        },
+        tooltip: {
+          backgroundColor: '#1a2332',
+          padding: 12,
+          titleFont: { size: 13, weight: '600' },
+          bodyFont: { size: 12 },
+          borderColor: '#e2e8f0',
+          borderWidth: 1,
+          callbacks: {
+            label: function(context) {
+              return 'Anomalies: ' + context.parsed.y;
+            }
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            stepSize: 1,
+            font: { size: 12, weight: '600', family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto' },
+            color: '#6b7280'
+          },
+          grid: {
+            color: '#f3f4f6',
+            borderColor: '#e2e8f0'
+          }
+        },
+        x: {
+          ticks: {
+            font: { size: 12, weight: '700', family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto' },
+            color: '#374151'
+          },
+          grid: {
+            display: false
+          }
+        }
+      }
+    }
+  });
+}
+
+function displayPage(page) {
+  currentPage = page;
+  const start = (page - 1) * rowsPerPage;
+  const end = start + rowsPerPage;
+  const pageRows = filteredRows.slice(start, end);
+
+  const tableBody = document.getElementById("table-body");
+  tableBody.innerHTML = "";
+
+  pageRows.forEach(cols => {
+    const tr = document.createElement("tr");
+
+    let latitude = cols[1];
+    let longitude = cols[2];
+
+    cols.forEach((col, index) => {
+      if (index === 1 || index === 2) {
+        return;
+      }
+
+      const td = document.createElement("td");
+      
+      const colUpper = col.toUpperCase();
+      
+      if (col.toLowerCase().includes("anomalie") || col === "1") {
+        const badge = document.createElement("span");
+        badge.className = "badge badge-danger";
+        badge.textContent = "Anomalie";
+        td.appendChild(badge);
+      } else if (col === "0") {
+        const badge = document.createElement("span");
+        badge.className = "badge badge-success";
+        badge.textContent = "Normal";
+        td.appendChild(badge);
+      } else if (colUpper === "FAIBLE") {
+        const badge = document.createElement("span");
+        badge.className = "badge badge-warning";
+        badge.textContent = "FAIBLE";
+        td.appendChild(badge);
+      } else if (colUpper === "MOYENNE") {
+        const badge = document.createElement("span");
+        badge.className = "badge badge-info";
+        badge.textContent = "MOYENNE";
+        td.appendChild(badge);
+      } else {
+        td.textContent = col;
+      }
+      
+      tr.appendChild(td);
+    });
+
+    const tdMap = document.createElement("td");
+    const mapButton = document.createElement("button");
+    mapButton.className = "map-button";
+    mapButton.innerHTML = "→ Voir sur la carte";
+    
+    mapButton.onclick = () => {
+      // Vérifier si on a déjà la position de l'utilisateur
+      if (window.userPosition) {
+        const userLat = window.userPosition.latitude;
+        const userLon = window.userPosition.longitude;
+        
+        // Ouvrir Google Maps avec la position actuelle et l'anomalie
+        window.open(
+          `https://www.google.com/maps/dir/?api=1&origin=${userLat},${userLon}&destination=${latitude},${longitude}&travelmode=driving`,
+          '_blank'
+        );
+      } else {
+        // Si pas de position, la demander avec haute précision
+        if (navigator.geolocation) {
+          mapButton.innerHTML = "⌛ Localisation haute précision...";
+          mapButton.disabled = true;
+          
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+              // Arrondir la position à ~100m de précision
+              const userLat = Math.round(position.coords.latitude * 1000) / 1000;
+              const userLon = Math.round(position.coords.longitude * 1000) / 1000;
+              
+              // Stocker pour utilisation future
+              window.userPosition = {
+                latitude: userLat,
+                longitude: userLon,
+                accuracy: 100
+              };
+              
+              // Mettre à jour l'affichage
+              document.getElementById('userLocation').innerHTML = `📍 Votre position : ${userLat.toFixed(3)}, ${userLon.toFixed(3)} <span style="color: #a0aec0;">(±100m)</span>`;
+              document.getElementById('userLocation').style.color = '#10b981';
+              
+              // Ouvrir Google Maps
+              window.open(
+                `https://www.google.com/maps/dir/?api=1&origin=${userLat},${userLon}&destination=${latitude},${longitude}&travelmode=driving`,
+                '_blank'
+              );
+              
+              mapButton.innerHTML = "→ Voir sur la carte";
+              mapButton.disabled = false;
+            },
+            (error) => {
+              console.error("Erreur de géolocalisation:", error);
+              
+              let errorMessage = "";
+              switch(error.code) {
+                case error.PERMISSION_DENIED:
+                  errorMessage = "❌ Accès à la localisation refusé.\n\n";
+                  errorMessage += "Pour autoriser :\n";
+                  errorMessage += "1. Cliquez sur l'icône 🔒 dans la barre d'adresse\n";
+                  errorMessage += "2. Autorisez l'accès à votre position\n";
+                  errorMessage += "3. Rechargez la page\n\n";
+                  errorMessage += "Voulez-vous afficher uniquement l'anomalie ?";
+                  break;
+                case error.POSITION_UNAVAILABLE:
+                  errorMessage = "Position non disponible. Afficher l'anomalie uniquement ?";
+                  break;
+                case error.TIMEOUT:
+                  errorMessage = "Délai d'attente dépassé. Afficher l'anomalie uniquement ?";
+                  break;
+                default:
+                  errorMessage = "Erreur inconnue. Afficher l'anomalie uniquement ?";
+              }
+              
+              if (confirm(errorMessage)) {
+                window.open(`https://www.google.com/maps?q=${latitude},${longitude}`, '_blank');
+              }
+              
+              mapButton.innerHTML = "→ Voir sur la carte";
+              mapButton.disabled = false;
+            },
+            {
+              enableHighAccuracy: true,
+              timeout: 15000,
+              maximumAge: 0
+            }
+          );
+        } else {
+          alert("❌ La géolocalisation n'est pas supportée par votre navigateur.\n\nAffichage de l'anomalie uniquement.");
+          window.open(`https://www.google.com/maps?q=${latitude},${longitude}`, '_blank');
+        }
+      }
+    };
+    
+    tdMap.appendChild(mapButton);
+    tr.appendChild(tdMap);
+
+    tableBody.appendChild(tr);
+  });
+
+  updatePagination();
+}
+
+function updatePagination() {
+  const totalPages = Math.ceil(filteredRows.length / rowsPerPage);
+  document.getElementById("totalPages").textContent = totalPages;
+  document.getElementById("pageInput").value = currentPage;
+  document.getElementById("pageInput").max = totalPages;
+
+  document.getElementById("firstPage").disabled = currentPage === 1;
+  document.getElementById("prevPage").disabled = currentPage === 1;
+  document.getElementById("nextPage").disabled = currentPage === totalPages;
+  document.getElementById("lastPage").disabled = currentPage === totalPages;
+}
+
+document.getElementById("firstPage").addEventListener("click", () => displayPage(1));
+document.getElementById("prevPage").addEventListener("click", () => displayPage(currentPage - 1));
+document.getElementById("nextPage").addEventListener("click", () => displayPage(currentPage + 1));
+document.getElementById("lastPage").addEventListener("click", () => {
+  const totalPages = Math.ceil(filteredRows.length / rowsPerPage);
+  displayPage(totalPages);
+});
+
+document.getElementById("pageInput").addEventListener("change", function(e) {
+  let page = parseInt(e.target.value);
+  const totalPages = Math.ceil(filteredRows.length / rowsPerPage);
+  if (page < 1) page = 1;
+  if (page > totalPages) page = totalPages;
+  displayPage(page);
+});
+
+document.getElementById("searchInput").addEventListener("input", function(e) {
+  const searchTerm = e.target.value.toLowerCase();
+  
+  filteredRows = allRows.filter(cols => 
+    cols.some(col => col.toLowerCase().includes(searchTerm))
+  );
+
+  displayPage(1);
+});
+
+fetchCSV();
+</script>
+
+</body>
+</html>

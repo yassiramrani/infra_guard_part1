@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard – Anomalies détectées</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', sans-serif;
+      background: #f5f7fa;
+      min-height: 100vh;
+      padding: 0;
+      color: #2c3e50;
+    }
+
+    .top-bar {
+      background: #1a2332;
+      color: white;
+      padding: 0 40px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .logo-section {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .logo {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 18px;
+    }
+
+    .logo-text {
+      font-size: 20px;
+      font-weight: 600;
+      letter-spacing: -0.5px;
+    }
+
+    .date-time {
+      font-size: 14px;
+      color: #a0aec0;
+      font-weight: 500;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 30px 40px;
+    }
+
+    header {
+      margin-bottom: 35px;
+    }
+
+    .page-title {
+      font-size: 28px;
+      font-weight: 700;
+      color: #1a2332;
+      margin-bottom: 8px;
+      letter-spacing: -0.5px;
+    }
+
+    .subtitle {
+      font-size: 15px;
+      color: #718096;
+      font-weight: 500;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 24px;
+      margin-bottom: 30px;
+    }
+
+    .card {
+      background: white;
+      padding: 28px;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      border: 1px solid #e2e8f0;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+
+    .card:hover {
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      transform: translateY(-2px);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 20px;
+    }
+
+    .card-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .icon-primary { background: #eef2ff; color: #667eea; }
+    .icon-danger { background: #fef2f2; color: #ef4444; }
+    .icon-warning { background: #fffbeb; color: #f59e0b; }
+    .icon-info { background: #eff6ff; color: #3b82f6; }
+
+    .card-value {
+      font-size: 36px;
+      font-weight: 700;
+      color: #1a2332;
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+
+    .card-label {
+      color: #718096;
+      font-size: 14px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .charts-section {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+      gap: 24px;
+      margin-bottom: 30px;
+    }
+
+    .chart-container {
+      background: white;
+      padding: 28px;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      border: 1px solid #e2e8f0;
+    }
+
+    .chart-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #1a2332;
+      margin-bottom: 24px;
+      letter-spacing: -0.3px;
+    }
+
+    .table-container {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      border: 1px solid #e2e8f0;
+      overflow: hidden;
+    }
+
+    .table-header {
+      background: white;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 24px 28px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+
+    .table-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #1a2332;
+      letter-spacing: -0.3px;
+    }
+
+    .search-box {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .search-input {
+      padding: 10px 16px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      width: 280px;
+      font-size: 14px;
+      outline: none;
+      transition: all 0.2s;
+      background: #f9fafb;
+    }
+
+    .search-input:focus {
+      border-color: #667eea;
+      background: white;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 16px 28px;
+      text-align: left;
+    }
+
+    th {
+      background: #f9fafb;
+      color: #374151;
+      font-weight: 700;
+      text-transform: uppercase;
+      font-size: 12px;
+      letter-spacing: 0.8px;
+      white-space: nowrap;
+      border-bottom: 2px solid #e2e8f0;
+    }
+
+    td {
+      color: #4b5563;
+      font-size: 14px;
+      border-bottom: 1px solid #f3f4f6;
+    }
+
+    .map-button {
+      background: #667eea;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 13px;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .map-button:hover {
+      background: #5568d3;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+    }
+
+    .map-button:active {
+      transform: translateY(0);
+    }
+
+    tbody tr {
+      transition: background 0.15s ease;
+    }
+
+    tbody tr:hover {
+      background: #f9fafb;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      text-transform: uppercase;
+    }
+
+    .badge-danger {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .badge-success {
+      background: #d1fae5;
+      color: #065f46;
+    }
+
+    .badge-warning {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .badge-info {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+
+    .pagination {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+      padding: 24px;
+      background: white;
+      border-top: 1px solid #e2e8f0;
+    }
+
+    .pagination button {
+      padding: 10px 16px;
+      border: 1px solid #e2e8f0;
+      background: white;
+      color: #374151;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 13px;
+      transition: all 0.2s ease;
+    }
+
+    .pagination button:hover:not(:disabled) {
+      background: #f9fafb;
+      border-color: #667eea;
+      color: #667eea;
+    }
+
+    .pagination button:disabled {
+      background: #f9fafb;
+      border-color: #e2e8f0;
+      color: #cbd5e1;
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+
+    .pagination .page-info {
+      color: #374151;
+      font-weight: 600;
+      padding: 0 12px;
+      font-size: 14px;
+    }
+
+    .pagination input {
+      width: 60px;
+      padding: 8px;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      text-align: center;
+      font-weight: 600;
+      font-size: 14px;
+      outline: none;
+    }
+
+    .pagination input:focus {
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .error {
+      color: #991b1b;
+      text-align: center;
+      margin-top: 20px;
+      padding: 20px;
+      background: #fee2e2;
+      border-radius: 12px;
+      font-weight: 600;
+      border: 1px solid #fecaca;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 60px;
+      color: #718096;
+      font-size: 15px;
+    }
+
+    .spinner {
+      border: 3px solid #e2e8f0;
+      border-top: 3px solid #667eea;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 0.8s linear infinite;
+      margin: 20px auto;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    @media (max-width: 768px) {
+      .top-bar {
+        padding: 0 20px;
+      }
+      .container {
+        padding: 20px;
+      }
+      .page-title { 
+        font-size: 24px; 
+      }
+      .stats { 
+        grid-template-columns: 1fr; 
+      }
+      .charts-section { 
+        grid-template-columns: 1fr; 
+      }
+      .search-input { 
+        width: 100%; 
+      }
+      .table-header { 
+        flex-direction: column;
+        align-items: stretch;
+      }
+      th, td {
+        padding: 12px 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="top-bar">
+  <div class="logo-section">
+    <div class="logo">AD</div>
+    <span class="logo-text">Anomaly Detection</span>
+  </div>
+  <div class="date-time">
+    <div id="dateTime"></div>
+    <div id="userLocation" style="font-size: 12px; margin-top: 4px; color: #10b981;"></div>
+  </div>
+</div>
+
+<div class="container">
+  <header>
+    <h1 class="page-title">Tableau de bord des anomalies</h1>
+    <p class="subtitle">Surveillance et analyse en temps réel des anomalies système</p>
+  </header>
+
+  <div class="stats">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon icon-primary">∑</div>
+      </div>
+      <div class="card-value" id="total">0</div>
+      <div class="card-label">Total enregistrements</div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon icon-danger">!</div>
+      </div>
+      <div class="card-value" id="anomalies">0</div>
+      <div class="card-label">Anomalies détectées</div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon icon-warning">◐</div>
+      </div>
+      <div class="card-value" id="faible">0</div>
+      <div class="card-label">Urgence faible</div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon icon-info">●</div>
+      </div>
+      <div class="card-value" id="moyenne">0</div>
+      <div class="card-label">Urgence moyenne</div>
+    </div>
+  </div>
+
+  
+<div class="card" style="margin-bottom: 30px; overflow: hidden; padding: 0;">
+    <div style="background: #1a2332; color: white; padding: 15px 28px; font-weight: 600;">🗺️ Localisation Temps Réel</div>
+    <iframe src="map_widget.html" width="100%" height="450px" style="border:none;"></iframe>
+</div>
+<div class="charts-section"
+>
+    <div class="chart-container">
+      <div class="chart-title">Distribution des anomalies</div>
+      <canvas id="anomaliesChart"></canvas>
+    </div>
+    <div class="chart-container">
+      <div class="chart-title">Niveaux d'urgence</div>
+      <canvas id="urgenceChart"></canvas>
+    </div>
+  </div>
+
+  <div class="table-container">
+    <div class="table-header">
+      <div class="table-title">Liste des enregistrements</div>
+      <div class="search-box">
+        <input type="text" id="searchInput" class="search-input" placeholder="Rechercher dans les enregistrements...">
+      </div>
+    </div>
+    <div id="loadingIndicator" class="loading">
+      <div class="spinner"></div>
+      <p>Chargement des données en cours...</p>
+    </div>
+    <table id="dataTable" style="display: none;">
+      <thead>
+        <tr id="table-head"></tr>
+      </thead>
+      <tbody id="table-body"></tbody>
+    </table>
+    <div class="pagination" id="pagination" style="display: none;">
+      <button id="firstPage">« Début</button>
+      <button id="prevPage">‹ Précédent</button>
+      <span class="page-info">
+        Page <input type="number" id="pageInput" value="1" min="1"> sur <span id="totalPages">1</span>
+      </span>
+      <button id="nextPage">Suivant ›</button>
+      <button id="lastPage">Fin »</button>
+    </div>
+  </div>
+
+  <p id="error" class="error" style="display: none;"></p>
+</div>
+
+<script>
+// Afficher la date et l'heure
+function updateDateTime() {
+  const now = new Date();
+  const options = { 
+    weekday: 'long', 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  };
+  document.getElementById('dateTime').textContent = now.toLocaleDateString('fr-FR', options);
+}
+updateDateTime();
+setInterval(updateDateTime, 60000);
+
+// Obtenir et afficher la position actuelle de l'utilisateur avec haute précision
+function getUserLocation() {
+  if (navigator.geolocation) {
+    const locationElement = document.getElementById('userLocation');
+    locationElement.textContent = '📍 Obtention de votre position...';
+    
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        // Arrondir la position à ~100m de précision
+        const lat = Math.round(position.coords.latitude * 1000) / 1000;
+        const lon = Math.round(position.coords.longitude * 1000) / 1000;
+        
+        locationElement.innerHTML = `📍 Votre position : ${lat.toFixed(3)}, ${lon.toFixed(3)} <span style="color: #a0aec0;">(±100m)</span>`;
+        
+        // Stocker la position arrondie pour l'utiliser dans les boutons
+        window.userPosition = {
+          latitude: lat,
+          longitude: lon,
+          accuracy: 100
+        };
+      },
+      (error) => {
+        const locationElement = document.getElementById('userLocation');
+        locationElement.style.color = '#ef4444';
+        
+        switch(error.code) {
+          case error.PERMISSION_DENIED:
+            locationElement.innerHTML = '❌ Localisation refusée - <a href="#" style="color: #3b82f6; text-decoration: underline;" onclick="getUserLocation(); return false;">Réessayer</a>';
+            break;
+          case error.POSITION_UNAVAILABLE:
+            locationElement.textContent = '❌ Position indisponible';
+            break;
+          case error.TIMEOUT:
+            locationElement.innerHTML = '⏱️ Délai dépassé - <a href="#" style="color: #3b82f6; text-decoration: underline;" onclick="getUserLocation(); return false;">Réessayer</a>';
+            break;
+          default:
+            locationElement.textContent = '❌ Erreur de localisation';
+        }
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 15000,
+        maximumAge: 0
+      }
+    );
+  } else {
+    document.getElementById('userLocation').textContent = '❌ Géolocalisation non supportée';
+    document.getElementById('userLocation').style.color = '#ef4444';
+  }
+}
+
+// Obtenir la position au chargement
+getUserLocation();
+// Mettre à jour la position toutes les 60 secondes
+setInterval(getUserLocation, 60000);
+
+let allRows = [];
+let filteredRows = [];
+let currentPage = 1;
+const rowsPerPage = 10;
+let anomaliesChart, urgenceChart;
+
+
+async function fetchCSV() {
+    // DONNÉES INJECTÉES PAR PYTHON (Bypass CORS & Fetch errors)
+    const injectedData = [["2025-12-20 06:30:07", "34.024882", "-6.84005", "Pothole", "0.49", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:30:08", "34.025032", "-6.83999", "Pothole", "0.56", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:30:08", "34.025082", "-6.83997", "Pothole", "0.42", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:30:09", "34.025132", "-6.83995", "Pothole", "0.41", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:30:10", "34.025482", "-6.83981", "Pothole", "0.45", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:30:11", "34.026132", "-6.83955", "Pothole", "0.42", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:30:12", "34.026532", "-6.83939", "Pothole", "0.46", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:30:13", "34.026682", "-6.83933", "Pothole", "0.43", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:30:14", "34.026982", "-6.83921", "Pothole", "0.46", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:30:14", "34.027182", "-6.83913", "Pothole", "0.41", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:30:15", "34.027232", "-6.83911", "Pothole", "0.48", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:30:16", "34.027432", "-6.83903", "Pothole", "0.48", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:30:16", "34.027482", "-6.83901", "Pothole", "0.43", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:30:17", "34.027532", "-6.83899", "Pothole", "0.43", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:30:18", "34.027582", "-6.83897", "Pothole", "0.44", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:30:18", "34.027632", "-6.83895", "Pothole", "0.42", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:30:19", "34.027782", "-6.83889", "Pothole", "0.42", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:30:20", "34.027832", "-6.83887", "Pothole", "0.46", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:30:20", "34.027882", "-6.83885", "Pothole", "0.55", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:30:21", "34.027932", "-6.83883", "Pothole", "0.44", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:30:22", "34.028032", "-6.83879", "Pothole", "0.55", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:30:22", "34.028082", "-6.83877", "Pothole", "0.45", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:30:23", "34.028132", "-6.83875", "Pothole", "0.57", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:30:24", "34.028182", "-6.83873", "Pothole", "0.5", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:30:24", "34.028232", "-6.83871", "Pothole", "0.64", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:30:25", "34.028282", "-6.83869", "Pothole", "0.66", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:30:26", "34.028332", "-6.83867", "Pothole", "0.4", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:30:26", "34.028382", "-6.83865", "Pothole", "0.6", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:30:27", "34.028432", "-6.83863", "Pothole", "0.53", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:30:27", "34.028482", "-6.83861", "Pothole", "0.5", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:30:28", "34.028532", "-6.83859", "Pothole", "0.46", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:30:29", "34.028632", "-6.83855", "Pothole", "0.49", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:30:29", "34.028682", "-6.83853", "Pothole", "0.51", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:30:30", "34.028732", "-6.83851", "Pothole", "0.46", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:30:31", "34.028782", "-6.83849", "Pothole", "0.53", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:30:31", "34.028832", "-6.83847", "Pothole", "0.51", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:30:32", "34.028882", "-6.83845", "Pothole", "0.42", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:30:33", "34.028932", "-6.83843", "Pothole", "0.44", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:30:33", "34.028982", "-6.83841", "Pothole", "0.47", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:30:34", "34.029032", "-6.83839", "Pothole", "0.58", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:30:35", "34.029082", "-6.83837", "Pothole", "0.54", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:30:36", "34.029132", "-6.83835", "Pothole", "0.51", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:30:36", "34.029182", "-6.83833", "Pothole", "0.44", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:30:37", "34.029232", "-6.83831", "Pothole", "0.46", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:30:38", "34.029732", "-6.83811", "Pothole", "0.42", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:30:38", "34.029782", "-6.83809", "Pothole", "0.51", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:30:39", "34.029832", "-6.83807", "Pothole", "0.5", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:30:40", "34.029882", "-6.83805", "Pothole", "0.52", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:30:40", "34.029932", "-6.83803", "Pothole", "0.44", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:30:41", "34.029982", "-6.83801", "Pothole", "0.45", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:30:42", "34.030182", "-6.83793", "Pothole", "0.56", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:30:42", "34.030232", "-6.83791", "Pothole", "0.45", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:30:43", "34.030332", "-6.83787", "Pothole", "0.4", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:30:44", "34.030432", "-6.83783", "Pothole", "0.42", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:30:44", "34.030582", "-6.83777", "Pothole", "0.42", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:30:45", "34.030632", "-6.83775", "Pothole", "0.46", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:30:46", "34.030682", "-6.83773", "Pothole", "0.52", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:30:46", "34.030732", "-6.83771", "Pothole", "0.44", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:30:47", "34.030832", "-6.83767", "Pothole", "0.45", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:30:48", "34.030882", "-6.83765", "Pothole", "0.49", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:30:48", "34.030932", "-6.83763", "Pothole", "0.46", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:30:49", "34.031082", "-6.83757", "Pothole", "0.43", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:30:50", "34.031132", "-6.83755", "Pothole", "0.47", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:30:50", "34.031282", "-6.83749", "Pothole", "0.52", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:30:51", "34.031332", "-6.83747", "Pothole", "0.65", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:30:52", "34.031382", "-6.83745", "Pothole", "0.58", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:30:52", "34.031432", "-6.83743", "Pothole", "0.4", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:30:53", "34.031482", "-6.83741", "Pothole", "0.46", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:30:54", "34.031532", "-6.83739", "Pothole", "0.65", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:30:54", "34.031582", "-6.83737", "Pothole", "0.69", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:30:55", "34.031632", "-6.83735", "Pothole", "0.63", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:30:56", "34.031682", "-6.83733", "Pothole", "0.48", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:30:57", "34.032082", "-6.83717", "Pothole", "0.47", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:30:57", "34.032132", "-6.83715", "Pothole", "0.44", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:30:58", "34.032182", "-6.83713", "Pothole", "0.46", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:30:59", "34.032232", "-6.83711", "Pothole", "0.44", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:31:00", "34.032732", "-6.83691", "Pothole", "0.45", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:31:00", "34.032832", "-6.83687", "Pothole", "0.5", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:31:01", "34.032882", "-6.83685", "Pothole", "0.58", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:31:02", "34.032932", "-6.83683", "Pothole", "0.67", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:31:02", "34.032982", "-6.83681", "Pothole", "0.61", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:31:03", "34.033032", "-6.83679", "Pothole", "0.65", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:31:04", "34.033082", "-6.83677", "Pothole", "0.59", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:31:04", "34.033132", "-6.83675", "Pothole", "0.44", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:31:05", "34.033232", "-6.83671", "Pothole", "0.5", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:31:06", "34.033282", "-6.83669", "Pothole", "0.58", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:31:06", "34.033332", "-6.83667", "Pothole", "0.58", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:31:07", "34.033382", "-6.83665", "Pothole", "0.55", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:31:08", "34.033432", "-6.83663", "Pothole", "0.57", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:31:08", "34.033482", "-6.83661", "Pothole", "0.59", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:31:09", "34.033532", "-6.83659", "Pothole", "0.63", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:31:09", "34.033582", "-6.83657", "Pothole", "0.51", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:31:10", "34.033632", "-6.83655", "Pothole", "0.49", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:31:11", "34.033682", "-6.83653", "Pothole", "0.44", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:31:12", "34.033782", "-6.83649", "Pothole", "0.44", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:31:12", "34.033832", "-6.83647", "Pothole", "0.48", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:31:13", "34.033882", "-6.83645", "Pothole", "0.48", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:31:14", "34.033932", "-6.83643", "Pothole", "0.53", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:31:14", "34.033982", "-6.83641", "Pothole", "0.51", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:31:15", "34.034032", "-6.83639", "Pothole", "0.53", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:31:15", "34.034082", "-6.83637", "Pothole", "0.51", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:31:16", "34.034132", "-6.83635", "Pothole", "0.48", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:31:17", "34.034182", "-6.83633", "Pothole", "0.5", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:31:17", "34.034232", "-6.83631", "Pothole", "0.45", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:31:18", "34.034282", "-6.83629", "Pothole", "0.55", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:31:19", "34.034332", "-6.83627", "Pothole", "0.47", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:31:19", "34.034382", "-6.83625", "Pothole", "0.52", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:31:20", "34.034432", "-6.83623", "Pothole", "0.42", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:31:21", "34.034532", "-6.83619", "Pothole", "0.45", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:31:21", "34.034582", "-6.83617", "Pothole", "0.51", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:31:22", "34.034632", "-6.83615", "Pothole", "0.55", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:31:23", "34.034682", "-6.83613", "Pothole", "0.55", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:31:23", "34.034732", "-6.83611", "Pothole", "0.55", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:31:24", "34.034882", "-6.83605", "Pothole", "0.41", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:31:25", "34.035132", "-6.83595", "Pothole", "0.48", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:31:26", "34.035182", "-6.83593", "Pothole", "0.54", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:31:26", "34.035232", "-6.83591", "Pothole", "0.61", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:31:27", "34.035282", "-6.83589", "Pothole", "0.6", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:31:28", "34.035332", "-6.83587", "Pothole", "0.69", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:31:28", "34.035382", "-6.83585", "Pothole", "0.67", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:31:29", "34.035432", "-6.83583", "Pothole", "0.64", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:31:30", "34.035482", "-6.83581", "Pothole", "0.63", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:31:30", "34.035532", "-6.83579", "Pothole", "0.6", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:31:31", "34.035582", "-6.83577", "Pothole", "0.61", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:31:31", "34.035632", "-6.83575", "Pothole", "0.64", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:31:32", "34.035682", "-6.83573", "Pothole", "0.63", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:31:33", "34.035732", "-6.83571", "Pothole", "0.63", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:31:33", "34.035782", "-6.83569", "Pothole", "0.6", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:31:34", "34.035832", "-6.83567", "Pothole", "0.52", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:31:35", "34.035882", "-6.83565", "Pothole", "0.45", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:31:36", "34.036332", "-6.83547", "Pothole", "0.4", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:31:36", "34.036482", "-6.83541", "Pothole", "0.44", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:31:37", "34.036582", "-6.83537", "Pothole", "0.48", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:31:38", "34.036632", "-6.83535", "Pothole", "0.41", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:31:38", "34.036682", "-6.83533", "Pothole", "0.46", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:31:39", "34.036732", "-6.83531", "Pothole", "0.5", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:31:39", "34.036782", "-6.83529", "Pothole", "0.56", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:31:40", "34.036832", "-6.83527", "Pothole", "0.44", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:31:41", "34.036882", "-6.83525", "Pothole", "0.49", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:31:41", "34.036932", "-6.83523", "Pothole", "0.56", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:31:42", "34.036982", "-6.83521", "Pothole", "0.67", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:31:43", "34.037032", "-6.83519", "Pothole", "0.51", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:31:43", "34.037082", "-6.83517", "Pothole", "0.53", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:31:44", "34.037132", "-6.83515", "Pothole", "0.57", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:31:46", "34.038282", "-6.83469", "Pothole", "0.55", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:31:46", "34.038332", "-6.83467", "Pothole", "0.72", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:31:47", "34.038382", "-6.83465", "Pothole", "0.59", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:31:48", "34.038432", "-6.83463", "Pothole", "0.69", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:31:48", "34.038482", "-6.83461", "Pothole", "0.72", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:31:49", "34.038532", "-6.83459", "Pothole", "0.67", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:31:50", "34.038582", "-6.83457", "Pothole", "0.62", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:31:50", "34.038632", "-6.83455", "Pothole", "0.59", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:31:51", "34.038682", "-6.83453", "Pothole", "0.56", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:31:52", "34.038732", "-6.83451", "Pothole", "0.56", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:31:52", "34.038782", "-6.83449", "Pothole", "0.54", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:31:53", "34.038832", "-6.83447", "Pothole", "0.44", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:31:54", "34.039182", "-6.83433", "Pothole", "0.46", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:31:55", "34.039532", "-6.83419", "Pothole", "0.4", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:31:55", "34.039582", "-6.83417", "Pothole", "0.46", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:31:56", "34.040282", "-6.83389", "Pothole", "0.49", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:31:57", "34.040332", "-6.83387", "Pothole", "0.45", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:31:58", "34.041082", "-6.83357", "Pothole", "0.49", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:31:59", "34.041232", "-6.83351", "Pothole", "0.43", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:32:00", "34.041332", "-6.83347", "Pothole", "0.45", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:32:00", "34.041382", "-6.83345", "Pothole", "0.41", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:32:01", "34.041532", "-6.83339", "Pothole", "0.46", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:32:02", "34.041582", "-6.83337", "Pothole", "0.49", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:32:02", "34.041632", "-6.83335", "Pothole", "0.41", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:32:03", "34.041732", "-6.83331", "Pothole", "0.52", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:32:04", "34.041782", "-6.83329", "Pothole", "0.54", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:32:04", "34.041782", "-6.83329", "Pothole", "0.44", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:32:05", "34.041832", "-6.83327", "Pothole", "0.43", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:32:05", "34.041832", "-6.83327", "Pothole", "0.4", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:32:06", "34.041882", "-6.83325", "Pothole", "0.44", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:32:07", "34.041932", "-6.83323", "Pothole", "0.47", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:32:07", "34.041932", "-6.83323", "Pothole", "0.44", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:32:08", "34.041982", "-6.83321", "Pothole", "0.51", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:32:09", "34.042032", "-6.83319", "Pothole", "0.51", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:32:09", "34.042032", "-6.83319", "Pothole", "0.47", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:32:10", "34.042082", "-6.83317", "Pothole", "0.52", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:32:10", "34.042082", "-6.83317", "Pothole", "0.47", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:32:11", "34.042132", "-6.83315", "Pothole", "0.5", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:32:11", "34.042132", "-6.83315", "Pothole", "0.49", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:32:12", "34.042182", "-6.83313", "Pothole", "0.56", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:32:13", "34.042232", "-6.83311", "Pothole", "0.41", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:32:13", "34.042282", "-6.83309", "Pothole", "0.45", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:32:14", "34.042282", "-6.83309", "Pothole", "0.42", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:32:15", "34.042382", "-6.83305", "Pothole", "0.43", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:32:15", "34.042432", "-6.83303", "Pothole", "0.53", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:32:16", "34.042482", "-6.83301", "Pothole", "0.48", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:32:16", "34.042532", "-6.83299", "Pothole", "0.53", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:32:17", "34.042632", "-6.83295", "Pothole", "0.45", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:32:18", "34.042732", "-6.83291", "Pothole", "0.43", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:32:19", "34.043482", "-6.83261", "Pothole", "0.55", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:32:20", "34.043532", "-6.83259", "Pothole", "0.43", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:32:20", "34.043582", "-6.83257", "Pothole", "0.6", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:32:21", "34.043632", "-6.83255", "Pothole", "0.6", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:32:22", "34.043832", "-6.83247", "Pothole", "0.45", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:32:23", "34.043882", "-6.83245", "Pothole", "0.41", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:32:23", "34.044032", "-6.83239", "Pothole", "0.48", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:32:24", "34.044082", "-6.83237", "Pothole", "0.51", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:32:25", "34.044132", "-6.83235", "Pothole", "0.45", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:32:25", "34.044182", "-6.83233", "Pothole", "0.42", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:32:26", "34.044232", "-6.83231", "Pothole", "0.43", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:32:26", "34.044282", "-6.83229", "Pothole", "0.53", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:32:27", "34.044332", "-6.83227", "Pothole", "0.44", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:32:28", "34.044382", "-6.83225", "Pothole", "0.6", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:32:28", "34.044382", "-6.83225", "Pothole", "0.47", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:32:29", "34.044432", "-6.83223", "Pothole", "0.72", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:32:30", "34.044432", "-6.83223", "Pothole", "0.45", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:32:30", "34.044482", "-6.83221", "Pothole", "0.67", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:32:31", "34.044482", "-6.83221", "Pothole", "0.44", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:32:31", "34.044532", "-6.83219", "Pothole", "0.51", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:32:32", "34.044532", "-6.83219", "Pothole", "0.44", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:32:32", "34.044582", "-6.83217", "Pothole", "0.59", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:32:34", "34.044582", "-6.83217", "Pothole", "0.44", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:32:35", "34.044632", "-6.83215", "Pothole", "0.57", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:32:35", "34.044632", "-6.83215", "Pothole", "0.54", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:32:36", "34.044682", "-6.83213", "Pothole", "0.49", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:32:37", "34.044732", "-6.83211", "Pothole", "0.5", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:32:37", "34.044782", "-6.83209", "Pothole", "0.43", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:32:38", "34.044882", "-6.83205", "Pothole", "0.5", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:32:39", "34.044932", "-6.83203", "Pothole", "0.49", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:32:39", "34.045082", "-6.83197", "Pothole", "0.53", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:32:40", "34.045132", "-6.83195", "Pothole", "0.5", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:32:40", "34.045132", "-6.83195", "Pothole", "0.42", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:32:41", "34.045182", "-6.83193", "Pothole", "0.47", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:32:42", "34.045182", "-6.83193", "Pothole", "0.43", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:32:42", "34.045232", "-6.83191", "Pothole", "0.49", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:32:43", "34.045282", "-6.83189", "Pothole", "0.49", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:32:44", "34.045332", "-6.83187", "Pothole", "0.56", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:32:44", "34.045382", "-6.83185", "Pothole", "0.45", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:32:45", "34.045432", "-6.83183", "Pothole", "0.45", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:32:46", "34.045482", "-6.83181", "Pothole", "0.56", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:32:46", "34.045532", "-6.83179", "Pothole", "0.6", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:32:47", "34.045582", "-6.83177", "Pothole", "0.46", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:32:48", "34.045732", "-6.83171", "Pothole", "0.5", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:32:48", "34.045782", "-6.83169", "Pothole", "0.52", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:32:49", "34.045832", "-6.83167", "Pothole", "0.65", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:32:50", "34.045882", "-6.83165", "Pothole", "0.66", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:32:50", "34.045932", "-6.83163", "Pothole", "0.65", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:32:51", "34.045932", "-6.83163", "Pothole", "0.52", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:32:51", "34.045982", "-6.83161", "Pothole", "0.67", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:32:52", "34.045982", "-6.83161", "Pothole", "0.58", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:32:53", "34.046032", "-6.83159", "Pothole", "0.69", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:32:53", "34.046032", "-6.83159", "Pothole", "0.53", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:32:54", "34.046082", "-6.83157", "Pothole", "0.59", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:32:54", "34.046132", "-6.83155", "Pothole", "0.43", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:32:55", "34.046182", "-6.83153", "Pothole", "0.6", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:32:56", "34.046232", "-6.83151", "Pothole", "0.46", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:32:56", "34.046282", "-6.83149", "Pothole", "0.51", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:32:57", "34.046282", "-6.83149", "Pothole", "0.45", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:32:58", "34.046332", "-6.83147", "Pothole", "0.51", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:32:58", "34.046332", "-6.83147", "Pothole", "0.45", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:32:59", "34.046382", "-6.83145", "Pothole", "0.57", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:32:59", "34.046382", "-6.83145", "Pothole", "0.48", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:33:00", "34.046432", "-6.83143", "Pothole", "0.64", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:33:00", "34.046432", "-6.83143", "Pothole", "0.43", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:33:01", "34.046432", "-6.83143", "Pothole", "0.43", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:33:02", "34.046482", "-6.83141", "Pothole", "0.66", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:33:02", "34.046482", "-6.83141", "Pothole", "0.49", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:33:03", "34.046532", "-6.83139", "Pothole", "0.63", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:33:03", "34.046532", "-6.83139", "Pothole", "0.48", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:33:04", "34.046532", "-6.83139", "Pothole", "0.45", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:33:04", "34.046582", "-6.83137", "Pothole", "0.61", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:33:05", "34.046582", "-6.83137", "Pothole", "0.5", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:33:06", "34.046632", "-6.83135", "Pothole", "0.56", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:33:06", "34.046632", "-6.83135", "Pothole", "0.43", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:33:07", "34.046682", "-6.83133", "Pothole", "0.51", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:33:07", "34.046732", "-6.83131", "Pothole", "0.5", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:33:08", "34.046782", "-6.83129", "Pothole", "0.53", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:33:09", "34.046832", "-6.83127", "Pothole", "0.57", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:33:09", "34.046832", "-6.83127", "Pothole", "0.46", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:33:10", "34.046832", "-6.83127", "Pothole", "0.46", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:33:11", "34.046882", "-6.83125", "Pothole", "0.62", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:33:11", "34.046882", "-6.83125", "Pothole", "0.47", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:33:12", "34.046882", "-6.83125", "Pothole", "0.45", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:33:12", "34.046882", "-6.83125", "Pothole", "0.44", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:33:13", "34.046932", "-6.83123", "Pothole", "0.54", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:33:13", "34.046932", "-6.83123", "Pothole", "0.42", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:33:14", "34.046982", "-6.83121", "Pothole", "0.59", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:33:15", "34.046982", "-6.83121", "Pothole", "0.51", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:33:15", "34.047032", "-6.83119", "Pothole", "0.52", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:33:16", "34.047032", "-6.83119", "Pothole", "0.45", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:33:16", "34.047032", "-6.83119", "Pothole", "0.44", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:33:17", "34.047032", "-6.83119", "Pothole", "0.41", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:33:17", "34.047082", "-6.83117", "Pothole", "0.5", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:33:18", "34.047082", "-6.83117", "Pothole", "0.5", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:33:19", "34.047132", "-6.83115", "Pothole", "0.55", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:33:19", "34.047132", "-6.83115", "Pothole", "0.45", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:33:20", "34.047182", "-6.83113", "Pothole", "0.46", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:33:20", "34.047232", "-6.83111", "Pothole", "0.5", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:33:21", "34.047232", "-6.83111", "Pothole", "0.42", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:33:22", "34.047282", "-6.83109", "Pothole", "0.63", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:33:22", "34.047332", "-6.83107", "Pothole", "0.47", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:33:23", "34.047332", "-6.83107", "Pothole", "0.45", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:33:23", "34.047332", "-6.83107", "Pothole", "0.41", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:33:24", "34.047382", "-6.83105", "Pothole", "0.54", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:33:24", "34.047432", "-6.83103", "Pothole", "0.56", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:33:25", "34.047432", "-6.83103", "Pothole", "0.56", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:33:26", "34.047482", "-6.83101", "Pothole", "0.61", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:33:26", "34.047532", "-6.83099", "Pothole", "0.52", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:33:27", "34.047532", "-6.83099", "Pothole", "0.45", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:33:28", "34.047582", "-6.83097", "Pothole", "0.55", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:33:28", "34.047582", "-6.83097", "Pothole", "0.55", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:33:29", "34.047582", "-6.83097", "Pothole", "0.45", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:33:29", "34.047632", "-6.83095", "Pothole", "0.54", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:33:30", "34.047682", "-6.83093", "Pothole", "0.48", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:33:30", "34.047682", "-6.83093", "Pothole", "0.44", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:33:31", "34.047732", "-6.83091", "Pothole", "0.58", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:33:32", "34.047782", "-6.83089", "Pothole", "0.53", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:33:32", "34.047782", "-6.83089", "Pothole", "0.42", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:33:33", "34.047832", "-6.83087", "Pothole", "0.42", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:33:34", "34.047882", "-6.83085", "Pothole", "0.4", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:33:34", "34.047932", "-6.83083", "Pothole", "0.48", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:33:35", "34.047982", "-6.83081", "Pothole", "0.46", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:33:35", "34.047982", "-6.83081", "Pothole", "0.46", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:33:36", "34.047982", "-6.83081", "Pothole", "0.45", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:33:37", "34.048032", "-6.83079", "Pothole", "0.5", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:33:37", "34.048032", "-6.83079", "Pothole", "0.46", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:33:38", "34.048082", "-6.83077", "Pothole", "0.68", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:33:38", "34.048132", "-6.83075", "Pothole", "0.64", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:33:39", "34.048182", "-6.83073", "Pothole", "0.54", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:33:40", "34.048232", "-6.83071", "Pothole", "0.59", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:33:40", "34.048282", "-6.83069", "Pothole", "0.59", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:33:41", "34.048332", "-6.83067", "Pothole", "0.5", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:33:42", "34.048382", "-6.83065", "Pothole", "0.47", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:33:42", "34.048382", "-6.83065", "Pothole", "0.47", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:33:43", "34.048432", "-6.83063", "Pothole", "0.6", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:33:43", "34.048482", "-6.83061", "Pothole", "0.57", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:33:44", "34.048532", "-6.83059", "Pothole", "0.48", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:33:45", "34.048582", "-6.83057", "Pothole", "0.52", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:33:45", "34.048632", "-6.83055", "Pothole", "0.5", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:33:46", "34.048682", "-6.83053", "Pothole", "0.54", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:33:47", "34.048682", "-6.83053", "Pothole", "0.47", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:33:47", "34.048732", "-6.83051", "Pothole", "0.5", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:33:48", "34.048782", "-6.83049", "Pothole", "0.44", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:33:48", "34.048832", "-6.83047", "Pothole", "0.55", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:33:49", "34.048832", "-6.83047", "Pothole", "0.45", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:33:50", "34.048832", "-6.83047", "Pothole", "0.43", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:33:50", "34.048882", "-6.83045", "Pothole", "0.56", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:33:51", "34.048882", "-6.83045", "Pothole", "0.53", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:33:51", "34.048882", "-6.83045", "Pothole", "0.48", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:33:52", "34.048932", "-6.83043", "Pothole", "0.53", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:33:53", "34.048932", "-6.83043", "Pothole", "0.52", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:33:53", "34.048982", "-6.83041", "Pothole", "0.6", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:33:54", "34.049032", "-6.83039", "Pothole", "0.57", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:33:54", "34.049032", "-6.83039", "Pothole", "0.45", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:33:55", "34.049032", "-6.83039", "Pothole", "0.41", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:33:55", "34.049082", "-6.83037", "Pothole", "0.57", "MOYENNE", "NON_TRAITE"], ["2025-12-20 06:33:56", "34.049082", "-6.83037", "Pothole", "0.41", "FAIBLE", "NON_TRAITE"], ["2025-12-20 06:33:57", "34.049132", "-6.83035", "Pothole", "0.59", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:27:30", "34.024882", "-6.84005", "Pothole", "0.49", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:27:31", "34.025032", "-6.83999", "Pothole", "0.56", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:27:32", "34.025082", "-6.83997", "Pothole", "0.42", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:27:33", "34.025132", "-6.83995", "Pothole", "0.41", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:27:34", "34.025482", "-6.83981", "Pothole", "0.45", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:27:35", "34.026132", "-6.83955", "Pothole", "0.42", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:27:36", "34.026532", "-6.83939", "Pothole", "0.46", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:27:37", "34.026682", "-6.83933", "Pothole", "0.43", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:27:38", "34.026982", "-6.83921", "Pothole", "0.46", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:27:39", "34.027182", "-6.83913", "Pothole", "0.41", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:27:40", "34.027232", "-6.83911", "Pothole", "0.48", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:27:41", "34.027432", "-6.83903", "Pothole", "0.48", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:27:41", "34.027482", "-6.83901", "Pothole", "0.43", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:27:42", "34.027532", "-6.83899", "Pothole", "0.43", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:27:43", "34.027582", "-6.83897", "Pothole", "0.44", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:27:44", "34.027632", "-6.83895", "Pothole", "0.42", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:27:44", "34.027782", "-6.83889", "Pothole", "0.42", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:27:45", "34.027832", "-6.83887", "Pothole", "0.46", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:27:46", "34.027882", "-6.83885", "Pothole", "0.55", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:27:47", "34.027932", "-6.83883", "Pothole", "0.44", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:27:47", "34.028032", "-6.83879", "Pothole", "0.55", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:27:48", "34.028082", "-6.83877", "Pothole", "0.45", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:27:49", "34.028132", "-6.83875", "Pothole", "0.57", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:27:50", "34.028182", "-6.83873", "Pothole", "0.5", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:27:50", "34.028232", "-6.83871", "Pothole", "0.64", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:27:51", "34.028282", "-6.83869", "Pothole", "0.66", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:27:52", "34.028332", "-6.83867", "Pothole", "0.4", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:27:52", "34.028382", "-6.83865", "Pothole", "0.6", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:27:53", "34.028432", "-6.83863", "Pothole", "0.53", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:27:54", "34.028482", "-6.83861", "Pothole", "0.5", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:27:55", "34.028532", "-6.83859", "Pothole", "0.46", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:27:55", "34.028632", "-6.83855", "Pothole", "0.49", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:27:56", "34.028682", "-6.83853", "Pothole", "0.51", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:27:57", "34.028732", "-6.83851", "Pothole", "0.46", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:27:57", "34.028782", "-6.83849", "Pothole", "0.53", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:27:58", "34.028832", "-6.83847", "Pothole", "0.51", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:27:59", "34.028882", "-6.83845", "Pothole", "0.42", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:27:59", "34.028932", "-6.83843", "Pothole", "0.44", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:28:00", "34.028982", "-6.83841", "Pothole", "0.47", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:28:01", "34.029032", "-6.83839", "Pothole", "0.58", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:28:02", "34.029082", "-6.83837", "Pothole", "0.54", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:28:02", "34.029132", "-6.83835", "Pothole", "0.51", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:28:03", "34.029182", "-6.83833", "Pothole", "0.44", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:28:04", "34.029232", "-6.83831", "Pothole", "0.46", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:28:05", "34.029732", "-6.83811", "Pothole", "0.42", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:28:06", "34.029782", "-6.83809", "Pothole", "0.51", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:28:06", "34.029832", "-6.83807", "Pothole", "0.5", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:28:07", "34.029882", "-6.83805", "Pothole", "0.52", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:28:08", "34.029932", "-6.83803", "Pothole", "0.44", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:28:08", "34.029982", "-6.83801", "Pothole", "0.45", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:28:09", "34.030182", "-6.83793", "Pothole", "0.56", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:28:10", "34.030232", "-6.83791", "Pothole", "0.45", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:28:11", "34.030332", "-6.83787", "Pothole", "0.4", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:28:11", "34.030432", "-6.83783", "Pothole", "0.42", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:28:12", "34.030582", "-6.83777", "Pothole", "0.42", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:28:13", "34.030632", "-6.83775", "Pothole", "0.46", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:28:14", "34.030682", "-6.83773", "Pothole", "0.52", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:28:14", "34.030732", "-6.83771", "Pothole", "0.44", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:28:15", "34.030832", "-6.83767", "Pothole", "0.45", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:28:16", "34.030882", "-6.83765", "Pothole", "0.49", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:28:16", "34.030932", "-6.83763", "Pothole", "0.46", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:28:17", "34.031082", "-6.83757", "Pothole", "0.43", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:28:18", "34.031132", "-6.83755", "Pothole", "0.47", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:28:19", "34.031282", "-6.83749", "Pothole", "0.52", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:28:20", "34.031332", "-6.83747", "Pothole", "0.65", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:28:20", "34.031382", "-6.83745", "Pothole", "0.58", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:28:21", "34.031432", "-6.83743", "Pothole", "0.4", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:28:22", "34.031482", "-6.83741", "Pothole", "0.46", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:28:22", "34.031532", "-6.83739", "Pothole", "0.65", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:28:23", "34.031582", "-6.83737", "Pothole", "0.69", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:28:24", "34.031632", "-6.83735", "Pothole", "0.63", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:28:25", "34.031682", "-6.83733", "Pothole", "0.48", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:28:26", "34.032082", "-6.83717", "Pothole", "0.47", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:28:26", "34.032132", "-6.83715", "Pothole", "0.44", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:28:27", "34.032182", "-6.83713", "Pothole", "0.46", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:28:28", "34.032232", "-6.83711", "Pothole", "0.44", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:28:29", "34.032732", "-6.83691", "Pothole", "0.45", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:28:30", "34.032832", "-6.83687", "Pothole", "0.5", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:28:30", "34.032882", "-6.83685", "Pothole", "0.58", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:28:31", "34.032932", "-6.83683", "Pothole", "0.67", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:28:32", "34.032982", "-6.83681", "Pothole", "0.61", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:28:32", "34.033032", "-6.83679", "Pothole", "0.65", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:28:33", "34.033082", "-6.83677", "Pothole", "0.59", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:28:34", "34.033132", "-6.83675", "Pothole", "0.44", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:28:34", "34.033232", "-6.83671", "Pothole", "0.5", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:28:35", "34.033282", "-6.83669", "Pothole", "0.58", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:28:36", "34.033332", "-6.83667", "Pothole", "0.58", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:28:36", "34.033382", "-6.83665", "Pothole", "0.55", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:28:37", "34.033432", "-6.83663", "Pothole", "0.57", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:28:38", "34.033482", "-6.83661", "Pothole", "0.59", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:28:38", "34.033532", "-6.83659", "Pothole", "0.63", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:28:39", "34.033582", "-6.83657", "Pothole", "0.51", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:28:40", "34.033632", "-6.83655", "Pothole", "0.49", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:28:40", "34.033682", "-6.83653", "Pothole", "0.44", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:28:41", "34.033782", "-6.83649", "Pothole", "0.44", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:28:42", "34.033832", "-6.83647", "Pothole", "0.48", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:28:43", "34.033882", "-6.83645", "Pothole", "0.48", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:28:43", "34.033932", "-6.83643", "Pothole", "0.53", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:28:44", "34.033982", "-6.83641", "Pothole", "0.51", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:28:45", "34.034032", "-6.83639", "Pothole", "0.53", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:28:46", "34.034082", "-6.83637", "Pothole", "0.51", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:28:46", "34.034132", "-6.83635", "Pothole", "0.48", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:28:47", "34.034182", "-6.83633", "Pothole", "0.5", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:28:48", "34.034232", "-6.83631", "Pothole", "0.45", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:28:48", "34.034282", "-6.83629", "Pothole", "0.55", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:28:49", "34.034332", "-6.83627", "Pothole", "0.47", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:28:50", "34.034382", "-6.83625", "Pothole", "0.52", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:28:50", "34.034432", "-6.83623", "Pothole", "0.42", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:28:51", "34.034532", "-6.83619", "Pothole", "0.45", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:28:52", "34.034582", "-6.83617", "Pothole", "0.51", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:28:52", "34.034632", "-6.83615", "Pothole", "0.55", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:28:53", "34.034682", "-6.83613", "Pothole", "0.55", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:28:54", "34.034732", "-6.83611", "Pothole", "0.55", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:28:55", "34.034882", "-6.83605", "Pothole", "0.41", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:28:56", "34.035132", "-6.83595", "Pothole", "0.48", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:28:56", "34.035182", "-6.83593", "Pothole", "0.54", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:28:57", "34.035232", "-6.83591", "Pothole", "0.61", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:28:58", "34.035282", "-6.83589", "Pothole", "0.6", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:28:58", "34.035332", "-6.83587", "Pothole", "0.69", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:28:59", "34.035382", "-6.83585", "Pothole", "0.67", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:29:00", "34.035432", "-6.83583", "Pothole", "0.64", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:29:00", "34.035482", "-6.83581", "Pothole", "0.63", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:29:01", "34.035532", "-6.83579", "Pothole", "0.6", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:29:02", "34.035582", "-6.83577", "Pothole", "0.61", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:29:02", "34.035632", "-6.83575", "Pothole", "0.64", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:29:03", "34.035682", "-6.83573", "Pothole", "0.63", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:29:04", "34.035732", "-6.83571", "Pothole", "0.63", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:29:04", "34.035782", "-6.83569", "Pothole", "0.6", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:29:05", "34.035832", "-6.83567", "Pothole", "0.52", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:29:06", "34.035882", "-6.83565", "Pothole", "0.45", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:29:07", "34.036332", "-6.83547", "Pothole", "0.4", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:29:08", "34.036482", "-6.83541", "Pothole", "0.44", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:29:08", "34.036582", "-6.83537", "Pothole", "0.48", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:29:09", "34.036632", "-6.83535", "Pothole", "0.41", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:29:10", "34.036682", "-6.83533", "Pothole", "0.46", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:29:11", "34.036732", "-6.83531", "Pothole", "0.5", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:29:11", "34.036782", "-6.83529", "Pothole", "0.56", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:29:12", "34.036832", "-6.83527", "Pothole", "0.44", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:29:13", "34.036882", "-6.83525", "Pothole", "0.49", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:29:14", "34.036932", "-6.83523", "Pothole", "0.56", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:29:15", "34.036982", "-6.83521", "Pothole", "0.67", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:29:16", "34.037032", "-6.83519", "Pothole", "0.51", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:29:17", "34.037082", "-6.83517", "Pothole", "0.53", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:29:17", "34.037132", "-6.83515", "Pothole", "0.57", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:29:20", "34.038282", "-6.83469", "Pothole", "0.55", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:29:20", "34.038332", "-6.83467", "Pothole", "0.72", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:29:21", "34.038382", "-6.83465", "Pothole", "0.59", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:29:22", "34.038432", "-6.83463", "Pothole", "0.69", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:29:22", "34.038482", "-6.83461", "Pothole", "0.72", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:29:23", "34.038532", "-6.83459", "Pothole", "0.67", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:29:24", "34.038582", "-6.83457", "Pothole", "0.62", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:29:25", "34.038632", "-6.83455", "Pothole", "0.59", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:29:26", "34.038682", "-6.83453", "Pothole", "0.56", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:29:26", "34.038732", "-6.83451", "Pothole", "0.56", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:29:27", "34.038782", "-6.83449", "Pothole", "0.54", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:29:28", "34.038832", "-6.83447", "Pothole", "0.44", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:29:29", "34.039182", "-6.83433", "Pothole", "0.46", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:29:30", "34.039532", "-6.83419", "Pothole", "0.4", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:29:31", "34.039582", "-6.83417", "Pothole", "0.46", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:29:32", "34.040282", "-6.83389", "Pothole", "0.49", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:29:33", "34.040332", "-6.83387", "Pothole", "0.45", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:29:34", "34.041082", "-6.83357", "Pothole", "0.49", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:29:35", "34.041232", "-6.83351", "Pothole", "0.43", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:29:36", "34.041332", "-6.83347", "Pothole", "0.45", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:29:36", "34.041382", "-6.83345", "Pothole", "0.41", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:29:37", "34.041532", "-6.83339", "Pothole", "0.46", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:29:38", "34.041582", "-6.83337", "Pothole", "0.49", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:29:39", "34.041632", "-6.83335", "Pothole", "0.41", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:29:39", "34.041732", "-6.83331", "Pothole", "0.52", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:29:40", "34.041782", "-6.83329", "Pothole", "0.54", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:29:41", "34.041782", "-6.83329", "Pothole", "0.44", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:29:41", "34.041832", "-6.83327", "Pothole", "0.43", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:29:42", "34.041832", "-6.83327", "Pothole", "0.4", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:29:42", "34.041882", "-6.83325", "Pothole", "0.44", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:29:43", "34.041932", "-6.83323", "Pothole", "0.47", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:29:44", "34.041932", "-6.83323", "Pothole", "0.44", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:29:44", "34.041982", "-6.83321", "Pothole", "0.51", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:29:45", "34.042032", "-6.83319", "Pothole", "0.51", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:29:46", "34.042032", "-6.83319", "Pothole", "0.47", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:29:46", "34.042082", "-6.83317", "Pothole", "0.52", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:29:47", "34.042082", "-6.83317", "Pothole", "0.47", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:29:47", "34.042132", "-6.83315", "Pothole", "0.5", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:29:48", "34.042132", "-6.83315", "Pothole", "0.49", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:29:49", "34.042182", "-6.83313", "Pothole", "0.56", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:29:50", "34.042232", "-6.83311", "Pothole", "0.41", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:29:50", "34.042282", "-6.83309", "Pothole", "0.45", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:29:51", "34.042282", "-6.83309", "Pothole", "0.42", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:29:52", "34.042382", "-6.83305", "Pothole", "0.43", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:29:52", "34.042432", "-6.83303", "Pothole", "0.53", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:29:53", "34.042482", "-6.83301", "Pothole", "0.48", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:29:53", "34.042532", "-6.83299", "Pothole", "0.53", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:29:54", "34.042632", "-6.83295", "Pothole", "0.45", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:29:55", "34.042732", "-6.83291", "Pothole", "0.43", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:29:56", "34.043482", "-6.83261", "Pothole", "0.55", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:29:57", "34.043532", "-6.83259", "Pothole", "0.43", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:29:58", "34.043582", "-6.83257", "Pothole", "0.6", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:29:58", "34.043632", "-6.83255", "Pothole", "0.6", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:29:59", "34.043832", "-6.83247", "Pothole", "0.45", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:30:00", "34.043882", "-6.83245", "Pothole", "0.41", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:30:01", "34.044032", "-6.83239", "Pothole", "0.48", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:30:01", "34.044082", "-6.83237", "Pothole", "0.51", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:30:02", "34.044132", "-6.83235", "Pothole", "0.45", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:30:03", "34.044182", "-6.83233", "Pothole", "0.42", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:30:03", "34.044232", "-6.83231", "Pothole", "0.43", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:30:04", "34.044282", "-6.83229", "Pothole", "0.53", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:30:05", "34.044332", "-6.83227", "Pothole", "0.44", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:30:05", "34.044382", "-6.83225", "Pothole", "0.6", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:30:06", "34.044382", "-6.83225", "Pothole", "0.47", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:30:07", "34.044432", "-6.83223", "Pothole", "0.72", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:30:07", "34.044432", "-6.83223", "Pothole", "0.45", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:30:08", "34.044482", "-6.83221", "Pothole", "0.67", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:30:08", "34.044482", "-6.83221", "Pothole", "0.44", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:30:09", "34.044532", "-6.83219", "Pothole", "0.51", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:30:10", "34.044532", "-6.83219", "Pothole", "0.44", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:30:10", "34.044582", "-6.83217", "Pothole", "0.59", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:30:11", "34.044582", "-6.83217", "Pothole", "0.44", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:30:12", "34.044632", "-6.83215", "Pothole", "0.57", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:30:12", "34.044632", "-6.83215", "Pothole", "0.54", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:30:13", "34.044682", "-6.83213", "Pothole", "0.49", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:30:13", "34.044732", "-6.83211", "Pothole", "0.5", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:30:14", "34.044782", "-6.83209", "Pothole", "0.43", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:30:15", "34.044882", "-6.83205", "Pothole", "0.5", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:30:15", "34.044932", "-6.83203", "Pothole", "0.49", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:30:16", "34.045082", "-6.83197", "Pothole", "0.53", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:30:17", "34.045132", "-6.83195", "Pothole", "0.5", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:30:18", "34.045132", "-6.83195", "Pothole", "0.42", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:30:18", "34.045182", "-6.83193", "Pothole", "0.47", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:30:19", "34.045182", "-6.83193", "Pothole", "0.43", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:30:19", "34.045232", "-6.83191", "Pothole", "0.49", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:30:20", "34.045282", "-6.83189", "Pothole", "0.49", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:30:21", "34.045332", "-6.83187", "Pothole", "0.56", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:30:21", "34.045382", "-6.83185", "Pothole", "0.45", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:30:22", "34.045432", "-6.83183", "Pothole", "0.45", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:30:23", "34.045482", "-6.83181", "Pothole", "0.56", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:30:23", "34.045532", "-6.83179", "Pothole", "0.6", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:30:24", "34.045582", "-6.83177", "Pothole", "0.46", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:30:25", "34.045732", "-6.83171", "Pothole", "0.5", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:30:25", "34.045782", "-6.83169", "Pothole", "0.52", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:30:26", "34.045832", "-6.83167", "Pothole", "0.65", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:30:27", "34.045882", "-6.83165", "Pothole", "0.66", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:30:27", "34.045932", "-6.83163", "Pothole", "0.65", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:30:28", "34.045932", "-6.83163", "Pothole", "0.52", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:30:29", "34.045982", "-6.83161", "Pothole", "0.67", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:30:29", "34.045982", "-6.83161", "Pothole", "0.58", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:30:30", "34.046032", "-6.83159", "Pothole", "0.69", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:30:31", "34.046032", "-6.83159", "Pothole", "0.53", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:30:31", "34.046082", "-6.83157", "Pothole", "0.59", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:30:32", "34.046132", "-6.83155", "Pothole", "0.43", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:30:33", "34.046182", "-6.83153", "Pothole", "0.6", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:30:33", "34.046232", "-6.83151", "Pothole", "0.46", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:30:34", "34.046282", "-6.83149", "Pothole", "0.51", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:30:35", "34.046282", "-6.83149", "Pothole", "0.45", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:30:35", "34.046332", "-6.83147", "Pothole", "0.51", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:30:36", "34.046332", "-6.83147", "Pothole", "0.45", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:30:37", "34.046382", "-6.83145", "Pothole", "0.57", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:30:37", "34.046382", "-6.83145", "Pothole", "0.48", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:30:38", "34.046432", "-6.83143", "Pothole", "0.64", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:30:38", "34.046432", "-6.83143", "Pothole", "0.43", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:30:39", "34.046432", "-6.83143", "Pothole", "0.43", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:30:40", "34.046482", "-6.83141", "Pothole", "0.66", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:30:40", "34.046482", "-6.83141", "Pothole", "0.49", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:30:41", "34.046532", "-6.83139", "Pothole", "0.63", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:30:42", "34.046532", "-6.83139", "Pothole", "0.48", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:30:42", "34.046532", "-6.83139", "Pothole", "0.45", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:30:43", "34.046582", "-6.83137", "Pothole", "0.61", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:30:43", "34.046582", "-6.83137", "Pothole", "0.5", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:30:44", "34.046632", "-6.83135", "Pothole", "0.56", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:30:45", "34.046632", "-6.83135", "Pothole", "0.43", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:30:45", "34.046682", "-6.83133", "Pothole", "0.51", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:30:46", "34.046732", "-6.83131", "Pothole", "0.5", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:30:47", "34.046782", "-6.83129", "Pothole", "0.53", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:30:47", "34.046832", "-6.83127", "Pothole", "0.57", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:30:48", "34.046832", "-6.83127", "Pothole", "0.46", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:30:48", "34.046832", "-6.83127", "Pothole", "0.46", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:30:49", "34.046882", "-6.83125", "Pothole", "0.62", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:30:50", "34.046882", "-6.83125", "Pothole", "0.47", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:30:50", "34.046882", "-6.83125", "Pothole", "0.45", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:30:51", "34.046882", "-6.83125", "Pothole", "0.44", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:30:51", "34.046932", "-6.83123", "Pothole", "0.54", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:30:52", "34.046932", "-6.83123", "Pothole", "0.42", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:30:53", "34.046982", "-6.83121", "Pothole", "0.59", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:30:53", "34.046982", "-6.83121", "Pothole", "0.51", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:30:54", "34.047032", "-6.83119", "Pothole", "0.52", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:30:54", "34.047032", "-6.83119", "Pothole", "0.45", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:30:55", "34.047032", "-6.83119", "Pothole", "0.44", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:30:56", "34.047032", "-6.83119", "Pothole", "0.41", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:30:56", "34.047082", "-6.83117", "Pothole", "0.5", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:30:57", "34.047082", "-6.83117", "Pothole", "0.5", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:30:57", "34.047132", "-6.83115", "Pothole", "0.55", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:30:58", "34.047132", "-6.83115", "Pothole", "0.45", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:30:59", "34.047182", "-6.83113", "Pothole", "0.46", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:30:59", "34.047232", "-6.83111", "Pothole", "0.5", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:31:00", "34.047232", "-6.83111", "Pothole", "0.42", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:31:01", "34.047282", "-6.83109", "Pothole", "0.63", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:31:01", "34.047332", "-6.83107", "Pothole", "0.47", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:31:02", "34.047332", "-6.83107", "Pothole", "0.45", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:31:02", "34.047332", "-6.83107", "Pothole", "0.41", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:31:03", "34.047382", "-6.83105", "Pothole", "0.54", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:31:04", "34.047432", "-6.83103", "Pothole", "0.56", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:31:04", "34.047432", "-6.83103", "Pothole", "0.56", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:31:05", "34.047482", "-6.83101", "Pothole", "0.61", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:31:06", "34.047532", "-6.83099", "Pothole", "0.52", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:31:06", "34.047532", "-6.83099", "Pothole", "0.45", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:31:07", "34.047582", "-6.83097", "Pothole", "0.55", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:31:08", "34.047582", "-6.83097", "Pothole", "0.55", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:31:08", "34.047582", "-6.83097", "Pothole", "0.45", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:31:09", "34.047632", "-6.83095", "Pothole", "0.54", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:31:10", "34.047682", "-6.83093", "Pothole", "0.48", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:31:10", "34.047682", "-6.83093", "Pothole", "0.44", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:31:11", "34.047732", "-6.83091", "Pothole", "0.58", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:55:37", "34.024882", "-6.84005", "Pothole", "0.49", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:55:38", "34.025032", "-6.83999", "Pothole", "0.56", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:55:39", "34.025082", "-6.83997", "Pothole", "0.42", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:55:39", "34.025132", "-6.83995", "Pothole", "0.41", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:55:40", "34.025482", "-6.83981", "Pothole", "0.45", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:55:42", "34.026132", "-6.83955", "Pothole", "0.42", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:55:43", "34.026532", "-6.83939", "Pothole", "0.46", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:55:43", "34.026682", "-6.83933", "Pothole", "0.43", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:55:45", "34.026982", "-6.83921", "Pothole", "0.46", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:55:46", "34.027182", "-6.83913", "Pothole", "0.41", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:55:47", "34.027232", "-6.83911", "Pothole", "0.48", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:55:48", "34.027432", "-6.83903", "Pothole", "0.48", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:55:48", "34.027482", "-6.83901", "Pothole", "0.43", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:55:50", "34.027532", "-6.83899", "Pothole", "0.43", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:55:50", "34.027582", "-6.83897", "Pothole", "0.44", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:55:51", "34.027632", "-6.83895", "Pothole", "0.42", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:55:52", "34.027782", "-6.83889", "Pothole", "0.42", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:55:52", "34.027832", "-6.83887", "Pothole", "0.46", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:55:53", "34.027882", "-6.83885", "Pothole", "0.55", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:55:54", "34.027932", "-6.83883", "Pothole", "0.44", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:55:54", "34.028032", "-6.83879", "Pothole", "0.55", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:55:55", "34.028082", "-6.83877", "Pothole", "0.45", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:55:56", "34.028132", "-6.83875", "Pothole", "0.57", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:55:56", "34.028182", "-6.83873", "Pothole", "0.5", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:55:57", "34.028232", "-6.83871", "Pothole", "0.64", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:55:58", "34.028282", "-6.83869", "Pothole", "0.66", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:55:58", "34.028332", "-6.83867", "Pothole", "0.4", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:55:59", "34.028382", "-6.83865", "Pothole", "0.6", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:56:00", "34.028432", "-6.83863", "Pothole", "0.53", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:56:00", "34.028482", "-6.83861", "Pothole", "0.5", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:56:01", "34.028532", "-6.83859", "Pothole", "0.46", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:56:02", "34.028632", "-6.83855", "Pothole", "0.49", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:56:02", "34.028682", "-6.83853", "Pothole", "0.51", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:56:03", "34.028732", "-6.83851", "Pothole", "0.46", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:56:04", "34.028782", "-6.83849", "Pothole", "0.53", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:56:04", "34.028832", "-6.83847", "Pothole", "0.51", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:56:05", "34.028882", "-6.83845", "Pothole", "0.42", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:56:06", "34.028932", "-6.83843", "Pothole", "0.44", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:56:06", "34.028982", "-6.83841", "Pothole", "0.47", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:56:07", "34.029032", "-6.83839", "Pothole", "0.58", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:56:08", "34.029082", "-6.83837", "Pothole", "0.54", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:56:08", "34.029132", "-6.83835", "Pothole", "0.51", "MOYENNE", "NON_TRAITE"], ["2025-12-20 07:56:09", "34.029182", "-6.83833", "Pothole", "0.44", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:56:10", "34.029232", "-6.83831", "Pothole", "0.46", "FAIBLE", "NON_TRAITE"], ["2025-12-20 07:56:11", "34.029732", "-6.83811", "Pothole", "0.42", "FAIBLE", "NON_TRAITE"]];
+    
+    console.log("Chargement de " + injectedData.length + " lignes...");
+
+    const headers = ["Date", "Lat", "Lon", "Type", "Confiance", "Urgence", "Statut"];
+    
+    // Headers du tableau
+    const tableHead = document.getElementById("table-head");
+    tableHead.innerHTML = "";
+    headers.forEach(h => {
+        const th = document.createElement("th");
+        th.textContent = h;
+        tableHead.appendChild(th);
+    });
+    const thMap = document.createElement("th");
+    thMap.textContent = "Action";
+    tableHead.appendChild(thMap);
+
+    allRows = injectedData;
+    
+    // Recalcul des stats
+    let anomaliesCount = 0;
+    let faibleCount = 0;
+    let moyenneCount = 0;
+
+    allRows.forEach(row => {
+        anomaliesCount++;
+        const urgence = row[5]; // Index 5 est l'urgence
+        if (urgence === "FAIBLE") faibleCount++;
+        if (urgence === "MOYENNE") moyenneCount++;
+        if (urgence === "CRITIQUE") moyenneCount++; 
+    });
+
+    // Mise à jour interface
+    document.getElementById("total").textContent = allRows.length;
+    document.getElementById("anomalies").textContent = anomaliesCount;
+    document.getElementById("faible").textContent = faibleCount;
+    document.getElementById("moyenne").textContent = moyenneCount;
+
+    createCharts(anomaliesCount, 0, faibleCount, moyenneCount);
+
+    filteredRows = [...allRows];
+    displayPage(1);
+
+    document.getElementById("loadingIndicator").style.display = "none";
+    document.getElementById("dataTable").style.display = "table";
+    document.getElementById("pagination").style.display = "flex";
+}
+
+ function old_fetch_disabled() {
+  try {
+    
+
+    if (!response.ok) {
+      throw new Error("Impossible de charger le fichier CSV");
+    }
+
+    const data = await response.text();
+    const rows = data.trim().split("\n");
+    const headers = rows[0].split(",").map(h => h.trim());
+
+    const tableHead = document.getElementById("table-head");
+    tableHead.innerHTML = "";
+
+    const latitudeIndex = headers.findIndex(h => h.toLowerCase().includes('latitude'));
+    const longitudeIndex = headers.findIndex(h => h.toLowerCase().includes('longitude'));
+
+    headers.forEach((h, index) => {
+      if (index !== latitudeIndex && index !== longitudeIndex) {
+        const th = document.createElement("th");
+        th.textContent = h;
+        tableHead.appendChild(th);
+      }
+    });
+    
+    const thMap = document.createElement("th");
+    thMap.textContent = "Localisation";
+    tableHead.appendChild(thMap);
+
+    allRows = [];
+    let anomaliesCount = 0;
+    let faibleCount = 0;
+    let moyenneCount = 0;
+
+    const urgenceIndex = headers.findIndex(h => 
+      h.toLowerCase().includes('urgence')
+    );
+
+    for (let i = 1; i < rows.length; i++) {
+      if (rows[i].trim() === "") continue;
+      
+      const cols = rows[i].split(",").map(c => c.trim());
+      
+      anomaliesCount++;
+
+      if (urgenceIndex !== -1 && cols[urgenceIndex]) {
+        const urgenceValue = cols[urgenceIndex].toUpperCase();
+        
+        if (urgenceValue === "FAIBLE") {
+          faibleCount++;
+        } else if (urgenceValue === "MOYENNE") {
+          moyenneCount++;
+          allRows.push(cols);
+        }
+      }
+    }
+
+    const total = allRows.length;
+    const normal = total - anomaliesCount;
+
+    const confianceIndex = headers.findIndex(h => 
+      h.toLowerCase().includes('confiance')
+    );
+
+    if (latitudeIndex !== -1 && longitudeIndex !== -1) {
+      const uniqueRows = [];
+      const seenLocations = new Set();
+
+      allRows.forEach(row => {
+        const locationKey = `${row[latitudeIndex]},${row[longitudeIndex]}`;
+        if (!seenLocations.has(locationKey)) {
+          seenLocations.add(locationKey);
+          uniqueRows.push(row);
+        }
+      });
+
+      allRows = uniqueRows;
+    }
+
+    if (confianceIndex !== -1) {
+      allRows.sort((a, b) => {
+        const confA = parseFloat(a[confianceIndex]) || 0;
+        const confB = parseFloat(b[confianceIndex]) || 0;
+        return confB - confA;
+      });
+    }
+
+    document.getElementById("total").textContent = total;
+    document.getElementById("anomalies").textContent = anomaliesCount;
+    document.getElementById("faible").textContent = faibleCount;
+    document.getElementById("moyenne").textContent = moyenneCount;
+
+    createCharts(anomaliesCount, normal, faibleCount, moyenneCount);
+
+    filteredRows = [...allRows];
+    displayPage(1);
+
+    document.getElementById("loadingIndicator").style.display = "none";
+    document.getElementById("dataTable").style.display = "table";
+    document.getElementById("pagination").style.display = "flex";
+
+  } catch (err) {
+    document.getElementById("loadingIndicator").style.display = "none";
+    document.getElementById("error").style.display = "block";
+    document.getElementById("error").textContent =
+      "Erreur : Assurez-vous que le fichier 'anomalies_detectees.csv' existe et lancez avec un serveur local";
+    console.error(err);
+  }
+}
+
+function createCharts(anomalies, normal, faible, moyenne) {
+  if (anomaliesChart) anomaliesChart.destroy();
+  if (urgenceChart) urgenceChart.destroy();
+
+  const ctx1 = document.getElementById('anomaliesChart').getContext('2d');
+  anomaliesChart = new Chart(ctx1, {
+    type: 'doughnut',
+    data: {
+      labels: ['Anomalies', 'Normal'],
+      datasets: [{
+        data: [anomalies, normal],
+        backgroundColor: ['#ef4444', '#10b981'],
+        borderWidth: 0
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: {
+            font: { size: 13, weight: '600', family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto' },
+            padding: 20,
+            boxWidth: 12,
+            boxHeight: 12
+          }
+        },
+        tooltip: {
+          backgroundColor: '#1a2332',
+          padding: 12,
+          titleFont: { size: 13, weight: '600' },
+          bodyFont: { size: 12 },
+          borderColor: '#e2e8f0',
+          borderWidth: 1,
+          callbacks: {
+            label: function(context) {
+              const label = context.label || '';
+              const value = context.parsed || 0;
+              const total = context.dataset.data.reduce((a, b) => a + b, 0);
+              const percentage = ((value / total) * 100).toFixed(1);
+              return label + ': ' + value + ' (' + percentage + '%)';
+            }
+          }
+        }
+      }
+    }
+  });
+
+  const ctx2 = document.getElementById('urgenceChart').getContext('2d');
+  urgenceChart = new Chart(ctx2, {
+    type: 'bar',
+    data: {
+      labels: ['FAIBLE', 'MOYENNE'],
+      datasets: [{
+        label: 'Nombre d\'anomalies',
+        data: [faible, moyenne],
+        backgroundColor: ['#f59e0b', '#3b82f6'],
+        borderWidth: 0,
+        borderRadius: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: {
+        legend: {
+          display: false
+        },
+        tooltip: {
+          backgroundColor: '#1a2332',
+          padding: 12,
+          titleFont: { size: 13, weight: '600' },
+          bodyFont: { size: 12 },
+          borderColor: '#e2e8f0',
+          borderWidth: 1,
+          callbacks: {
+            label: function(context) {
+              return 'Anomalies: ' + context.parsed.y;
+            }
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            stepSize: 1,
+            font: { size: 12, weight: '600', family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto' },
+            color: '#6b7280'
+          },
+          grid: {
+            color: '#f3f4f6',
+            borderColor: '#e2e8f0'
+          }
+        },
+        x: {
+          ticks: {
+            font: { size: 12, weight: '700', family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto' },
+            color: '#374151'
+          },
+          grid: {
+            display: false
+          }
+        }
+      }
+    }
+  });
+}
+
+function displayPage(page) {
+  currentPage = page;
+  const start = (page - 1) * rowsPerPage;
+  const end = start + rowsPerPage;
+  const pageRows = filteredRows.slice(start, end);
+
+  const tableBody = document.getElementById("table-body");
+  tableBody.innerHTML = "";
+
+  pageRows.forEach(cols => {
+    const tr = document.createElement("tr");
+
+    let latitude = cols[1];
+    let longitude = cols[2];
+
+    cols.forEach((col, index) => {
+      if (index === 1 || index === 2) {
+        return;
+      }
+
+      const td = document.createElement("td");
+      
+      const colUpper = col.toUpperCase();
+      
+      if (col.toLowerCase().includes("anomalie") || col === "1") {
+        const badge = document.createElement("span");
+        badge.className = "badge badge-danger";
+        badge.textContent = "Anomalie";
+        td.appendChild(badge);
+      } else if (col === "0") {
+        const badge = document.createElement("span");
+        badge.className = "badge badge-success";
+        badge.textContent = "Normal";
+        td.appendChild(badge);
+      } else if (colUpper === "FAIBLE") {
+        const badge = document.createElement("span");
+        badge.className = "badge badge-warning";
+        badge.textContent = "FAIBLE";
+        td.appendChild(badge);
+      } else if (colUpper === "MOYENNE") {
+        const badge = document.createElement("span");
+        badge.className = "badge badge-info";
+        badge.textContent = "MOYENNE";
+        td.appendChild(badge);
+      } else {
+        td.textContent = col;
+      }
+      
+      tr.appendChild(td);
+    });
+
+    const tdMap = document.createElement("td");
+    const mapButton = document.createElement("button");
+    mapButton.className = "map-button";
+    mapButton.innerHTML = "→ Voir sur la carte";
+    
+    mapButton.onclick = () => {
+      // Vérifier si on a déjà la position de l'utilisateur
+      if (window.userPosition) {
+        const userLat = window.userPosition.latitude;
+        const userLon = window.userPosition.longitude;
+        
+        // Ouvrir Google Maps avec la position actuelle et l'anomalie
+        window.open(
+          `https://www.google.com/maps/dir/?api=1&origin=${userLat},${userLon}&destination=${latitude},${longitude}&travelmode=driving`,
+          '_blank'
+        );
+      } else {
+        // Si pas de position, la demander avec haute précision
+        if (navigator.geolocation) {
+          mapButton.innerHTML = "⌛ Localisation haute précision...";
+          mapButton.disabled = true;
+          
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+              // Arrondir la position à ~100m de précision
+              const userLat = Math.round(position.coords.latitude * 1000) / 1000;
+              const userLon = Math.round(position.coords.longitude * 1000) / 1000;
+              
+              // Stocker pour utilisation future
+              window.userPosition = {
+                latitude: userLat,
+                longitude: userLon,
+                accuracy: 100
+              };
+              
+              // Mettre à jour l'affichage
+              document.getElementById('userLocation').innerHTML = `📍 Votre position : ${userLat.toFixed(3)}, ${userLon.toFixed(3)} <span style="color: #a0aec0;">(±100m)</span>`;
+              document.getElementById('userLocation').style.color = '#10b981';
+              
+              // Ouvrir Google Maps
+              window.open(
+                `https://www.google.com/maps/dir/?api=1&origin=${userLat},${userLon}&destination=${latitude},${longitude}&travelmode=driving`,
+                '_blank'
+              );
+              
+              mapButton.innerHTML = "→ Voir sur la carte";
+              mapButton.disabled = false;
+            },
+            (error) => {
+              console.error("Erreur de géolocalisation:", error);
+              
+              let errorMessage = "";
+              switch(error.code) {
+                case error.PERMISSION_DENIED:
+                  errorMessage = "❌ Accès à la localisation refusé.\n\n";
+                  errorMessage += "Pour autoriser :\n";
+                  errorMessage += "1. Cliquez sur l'icône 🔒 dans la barre d'adresse\n";
+                  errorMessage += "2. Autorisez l'accès à votre position\n";
+                  errorMessage += "3. Rechargez la page\n\n";
+                  errorMessage += "Voulez-vous afficher uniquement l'anomalie ?";
+                  break;
+                case error.POSITION_UNAVAILABLE:
+                  errorMessage = "Position non disponible. Afficher l'anomalie uniquement ?";
+                  break;
+                case error.TIMEOUT:
+                  errorMessage = "Délai d'attente dépassé. Afficher l'anomalie uniquement ?";
+                  break;
+                default:
+                  errorMessage = "Erreur inconnue. Afficher l'anomalie uniquement ?";
+              }
+              
+              if (confirm(errorMessage)) {
+                window.open(`https://www.google.com/maps?q=${latitude},${longitude}`, '_blank');
+              }
+              
+              mapButton.innerHTML = "→ Voir sur la carte";
+              mapButton.disabled = false;
+            },
+            {
+              enableHighAccuracy: true,
+              timeout: 15000,
+              maximumAge: 0
+            }
+          );
+        } else {
+          alert("❌ La géolocalisation n'est pas supportée par votre navigateur.\n\nAffichage de l'anomalie uniquement.");
+          window.open(`https://www.google.com/maps?q=${latitude},${longitude}`, '_blank');
+        }
+      }
+    };
+    
+    tdMap.appendChild(mapButton);
+    tr.appendChild(tdMap);
+
+    tableBody.appendChild(tr);
+  });
+
+  updatePagination();
+}
+
+function updatePagination() {
+  const totalPages = Math.ceil(filteredRows.length / rowsPerPage);
+  document.getElementById("totalPages").textContent = totalPages;
+  document.getElementById("pageInput").value = currentPage;
+  document.getElementById("pageInput").max = totalPages;
+
+  document.getElementById("firstPage").disabled = currentPage === 1;
+  document.getElementById("prevPage").disabled = currentPage === 1;
+  document.getElementById("nextPage").disabled = currentPage === totalPages;
+  document.getElementById("lastPage").disabled = currentPage === totalPages;
+}
+
+document.getElementById("firstPage").addEventListener("click", () => displayPage(1));
+document.getElementById("prevPage").addEventListener("click", () => displayPage(currentPage - 1));
+document.getElementById("nextPage").addEventListener("click", () => displayPage(currentPage + 1));
+document.getElementById("lastPage").addEventListener("click", () => {
+  const totalPages = Math.ceil(filteredRows.length / rowsPerPage);
+  displayPage(totalPages);
+});
+
+document.getElementById("pageInput").addEventListener("change", function(e) {
+  let page = parseInt(e.target.value);
+  const totalPages = Math.ceil(filteredRows.length / rowsPerPage);
+  if (page < 1) page = 1;
+  if (page > totalPages) page = totalPages;
+  displayPage(page);
+});
+
+document.getElementById("searchInput").addEventListener("input", function(e) {
+  const searchTerm = e.target.value.toLowerCase();
+  
+  filteredRows = allRows.filter(cols => 
+    cols.some(col => col.toLowerCase().includes(searchTerm))
+  );
+
+  displayPage(1);
+});
+
+fetchCSV();
+</script>
+
+</body>
+</html>
