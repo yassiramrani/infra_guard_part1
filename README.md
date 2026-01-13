@@ -1,6 +1,6 @@
-# 🏙️ CleanCity AI - Urban Anomaly Detection & Logistics System
+# 🏙️ INFRAGUARD AI - Urban Anomaly Detection & Logistics System
 
-CleanCity AI is an intelligent system designed to automate the detection of urban anomalies (such as potholes, garbage, and infrastructure defects) and optimize the logistics for their resolution.
+INFRAGUARD AI is an intelligent system designed to automate the detection of urban anomalies (such as potholes, garbage, and infrastructure defects) and optimize the logistics for their resolution.
 
 ## 🚀 Project Overview
 
